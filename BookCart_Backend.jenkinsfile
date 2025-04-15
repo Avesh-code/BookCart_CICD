@@ -1,0 +1,98 @@
+pipeline{
+    agent any
+    environment {
+        //---------NEXUS PROPERTIES---------
+        NEXUS_URL = 'http://localhost:8081/repository/BookCart/'
+        NEXUS_CREDENTIALS_ID = 'nexus'
+        GROUP_ID = 'BookCart_Backend'
+        ARTIFACT_ID = 'BookCart_Backend'
+        VERSION = '1.0.0'
+        FILE_EXTENSION = 'zip'
+        //---------SONARQUBE PROPERTIES-----------
+        SONARQUBE_URL = 'http://localhost:9000'
+        SONARQUBE_PROJECT_KEY = 'BookCart_backend'
+        SONARQUBE_TOKEN = credentials ('SONAR_TOKEN')
+        //------------GIT REPO PROPERTIES----------
+        REPO_URL = 'https://github.com/Avesh-code/BookCart.git'
+        BRANCH = 'master'
+    }
+    stages{
+        stage('Clone the project'){
+            steps{
+                 git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+            }
+        }
+        stage('Restore the Project'){
+            steps{
+                bat 'cd BookCart'
+                bat 'dotnet restore'
+            }
+        }
+        // stage('Sonar Scanner Run '){
+        //   steps{
+        //         bat 'sonar-scanner.bat -D"sonar.projectKey=${env.SONARQUBE_PROJECT_KEY}" -D"sonar.sources=." -D"sonar.host.url=${env.SONARQUBE_URL}" -D"sonar.token=${env.SONARQUBE_TOKEN}"'
+        //     }
+        // }
+        stage('Build of Project'){
+            steps{
+                bat 'dotnet build'
+            }
+        }
+        stage('Publish Folder of Project'){
+            steps{
+                bat 'dotnet publish -c Release -o Publish/'
+            }
+        }
+        stage('previous zip delete') {
+            steps {
+                bat """
+                if exist "%WORKSPACE%\\*.zip" del /Q "%WORKSPACE%\\*.zip
+                """
+            }
+        }
+        stage('Zip BookCart Build') {
+          steps {
+              script {
+                    def output = bat(script: """
+                    powershell -Command "\$timestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm'; \$zipFile =  '${env.ARTIFACT_ID}-' + '${env.VERSION}-' + \$timestamp + '.zip'; Compress-Archive -Path Publish\\* -DestinationPath \$zipFile; echo \$zipFile"
+                    """, returnStdout: true)
+                    // Split the output by line breaks and trim each line
+                    def lines = output.split("\\r?\\n").findAll { it.trim() }
+                    // The zip file name should be the last non-empty line
+                    def zipFile = lines[-1].trim()
+                    echo "Created ZIP file: ${zipFile}"
+                    env.ZIP_FILE = zipFile
+              }
+          }
+        }
+        stage('Upload to Nexus') {
+            steps {
+                script {
+                    def zipfile_path = "${env.WORKSPACE}\\${env.ZIP_FILE}"
+                    env.ZIP_FILE_PATH = zipfile_path
+                    def nexusUrl = "${env.NEXUS_URL}${env.GROUP_ID.replace('.', '/')}/${env.VERSION}/${env.ZIP_FILE}"
+                    env.NEXUS__URL=nexusUrl
+                    
+                    withCredentials([usernamePassword(credentialsId: env.NEXUS_CREDENTIALS_ID, passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) 
+                    {
+                        
+                     bat """
+                     curl -u %NEXUS_USERNAME%:%NEXUS_PASSWORD% --upload-file "%ZIP_FILE_PATH%" "%NEXUS__URL%"
+                    """
+                    }
+                }
+            }
+        }
+        
+        // stage('Deploy using Ansible on ubuntu node'){
+        //     agent {
+        //         label 'ubuntu' 
+        //     }
+        //     steps {
+        //         script {
+        //             sh 'ansible-playbook /home/admin/ansible/angular/web_host.yml'
+        //          }
+        //     }
+        // }
+    }
+}
