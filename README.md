@@ -16,4 +16,6 @@
 
 * 🚀 **Jenkins**
 
+* 🐧 **Ubuntu Linux**
+
 * 🤖 **Ansible**
