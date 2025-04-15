@@ -1,4 +1,4 @@
-# 📚 BookCart_CICD
+# 📚 BookCart_CI/CD
 
 ## ✅ Pre-requisites:
 
