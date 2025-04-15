@@ -1,11 +1,19 @@
-# BookCart_CICD
+# 📚 BookCart_CICD
 
-Pre requisites:-
-Node 
-Dotnet 9.0
-JDK 22
-Angular Cli
-Nexus
-SonarQube + Sonar Scanner
-Jenkins
-Ansible
+## ✅ Pre-requisites:
+
+* 🟢 **Node** 
+
+* ⚙️ **Dotnet 9.0**
+
+* ☕ **JDK 22**
+
+* 🅰️ **Angular CLI**
+
+* 📦 **Nexus**
+
+* 🛠️ **SonarQube + Sonar Scanner**
+
+* 🚀 **Jenkins**
+
+* 🤖 **Ansible**
