@@ -84,15 +84,15 @@ pipeline{
             }
         }
         
-        // stage('Deploy using Ansible on ubuntu node'){
-        //     agent {
-        //         label 'ubuntu' 
-        //     }
-        //     steps {
-        //         script {
-        //             sh 'ansible-playbook /home/admin/ansible/angular/web_host.yml'
-        //          }
-        //     }
-        // }
+         stage('Deploy using Ansible on ubuntu node'){
+             agent {
+                 label 'ubuntu' 
+             }
+             steps {
+                 script {
+                     sh 'ansible-playbook /home/playbook/BookCart/BookCart_Backend.yml'
+                  }
+             }
+         }
     }
 }
