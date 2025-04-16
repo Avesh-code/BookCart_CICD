@@ -1,7 +1,7 @@
-Jenkins Pipeline
-
 pipeline{
-    agent any
+    agent {
+        label 'main'
+    }
     environment {
         //---------NEXUS PROPERTIES---------
         NEXUS_URL = 'http://localhost:8081/repository/BookCart/'
@@ -13,7 +13,7 @@ pipeline{
         //---------SONARQUBE PROPERTIES-----------
         SONARQUBE_URL = 'http://localhost:9000'
         SONARQUBE_PROJECT_KEY = 'BookCart_Frontend'
-        SONARQUBE_TOKEN = credentials ('SONAR_TOKEN')
+        SONARQUBE_TOKEN = credentials ('SONAR_TOKEN')// SONARQUBE_TOKEN = 'squ_0d2d5d148b826735eec9108ad5a38d12d5cbb66f'
         //------------GIT REPO PROPERTIES----------
         REPO_URL = 'https://github.com/Avesh-code/BookCart.git'
         BRANCH = 'master'
@@ -93,14 +93,14 @@ pipeline{
         }
         
         stage('Deploy using Ansible on ubuntu node'){
-              agent {
-                 label 'ubuntu' 
-             }
-              steps {
-                  script {
-                      sh 'ansible-playbook /home/playbook/BookCart/BookCart_Frontend.yml'
-                   }
-             }
-         }
+             agent {
+                label 'ubuntu' 
+            }
+             steps {
+                 script {
+                     sh 'ansible-playbook -i /etc/ansible/hosts /home/admin/playbook/BookCart/BookCart_Frontend.yml'
+                  }
+            }
+        }
     }
 }
