@@ -1,5 +1,7 @@
 pipeline{
-    agent any
+    agent {
+        label 'main'
+    }
     environment {
         //---------NEXUS PROPERTIES---------
         NEXUS_URL = 'http://localhost:8081/repository/BookCart/'
@@ -84,15 +86,15 @@ pipeline{
             }
         }
         
-         stage('Deploy using Ansible on ubuntu node'){
-             agent {
-                 label 'ubuntu' 
-             }
-             steps {
-                 script {
-                     sh 'ansible-playbook /home/playbook/BookCart/BookCart_Backend.yml'
-                  }
-             }
-         }
+        stage('Deploy using Ansible on ubuntu node'){
+            agent {
+                label 'ubuntu' 
+            }
+            steps {
+                script {
+                    sh 'ansible-playbook -i /etc/ansible/hosts /home/admin/playbook/BookCart/BookCart_Backend.yml'
+                 }
+            }
+        }
     }
 }
