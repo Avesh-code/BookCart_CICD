@@ -1,1 +1,67 @@
 
+---
+
+- name: IIS App Deployment Playbook
+  hosts: windows
+  vars:
+    app_path: "C:\\inetpub\\wwwroot\\Book_Cart\\Backend_BookCart"
+    backup_path: "C:\\temp\\Backend_BookCart_backup"
+    artifact_url: "http://localhost:8081/repository/BookCart/BookCart_Backend/1.0.0/BookCart_Backend-1.0.0-2025-04-15_14-31.zip"
+    artifact_dest: "C:\\temp\\latest_artifact.zip"
+    extract_path: "C:\\temp\\Backend_BookCart"
+    config_patterns:
+      - "*.json"
+      - "*.log"
+      - "runtimes"
+  tasks:
+  
+    - name: Stop IIS service
+      win_service:
+        name: W3SVC
+        state: stopped
+        
+    - name: Backup old configs
+      win_copy:
+        src: "{{ app_path }}"
+        dest: "{{ backup_path }}"
+        remote_src: yes
+        include: "{{ config_patterns }}"
+        
+    - name: Delete old publish folder
+      win_file:
+        path: "{{ app_path }}"
+        state: absent
+        
+    - name: Download new artifact
+      win_get_url:
+        url: "{{ artifact_url }}"
+        dest: "{{ artifact_dest }}"
+        
+    - name: Unzip the artifact
+      win_unzip:
+        src: "{{ artifact_dest }}"
+        dest: "{{ extract_path }}"
+        removes: "{{ extract_path }}\\index.html"  # Adjust if needed
+        
+    - name: Copy new build to app folder
+      win_copy:
+        src: "{{ extract_path }}"
+        dest: "{{ app_path }}"
+        remote_src: yes
+        
+    #- name: Delete new config files from new build
+    #  win_file:
+    #    path: "{{ app_path }}\\{{ item }}"
+    #    state: absent
+    #  loop: "{{ config_patterns }}"
+      
+    #- name: Restore old configs
+    #  win_copy:
+    #    src: "{{ backup_path }}"
+    #    dest: "{{ app_path }}"
+    #    remote_src: yes
+        
+    - name: Start IIS service
+      win_service:
+        name: W3SVC
+        state: started
